@@ -37,19 +37,19 @@ func main() {
 		Handler: mux,
 	}
 	
-	mux.Handle("/app/", http.StripPrefix("/app/", apiCfg.middlewareMetricsInc(http.FileServer(http.Dir(".")))))
+	mux.Handle("GET /app/", http.StripPrefix("/app/", apiCfg.middlewareMetricsInc(http.FileServer(http.Dir(".")))))
 
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("GET /api/healthz", func(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(200)
 		w.Write([]byte("OK"))
 	})
 
-	mux.HandleFunc("/metrics", func(w http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("GET /api/metrics", func(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(200)
 		w.Write([]byte(fmt.Sprintf("Hits: %d", apiCfg.returnRequests())))
 	}) 
 	
-	mux.HandleFunc("/reset", func(w http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("POST /api/reset", func(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(200)
 		apiCfg.resetRequests()
 		w.Write([]byte(fmt.Sprintf("Server Hits reset! %d", apiCfg.returnRequests())))
