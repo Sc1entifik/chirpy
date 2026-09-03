@@ -3,30 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"sync/atomic"
 )
-
-type apiConfig struct {
-	fileserverHits atomic.Int32
-}
-
-func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
-
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		cfg.fileserverHits.Add(1)
-
-		next.ServeHTTP(w, req)
-	})
-}
-
-func (cfg *apiConfig) returnRequests() int32 {
-
-	return cfg.fileserverHits.Load()
-}
-
-func (cfg *apiConfig) resetRequests() {
-	cfg.fileserverHits.Store(0)
-}
 
 
 func main() {
@@ -44,12 +21,22 @@ func main() {
 		w.Write([]byte("OK"))
 	})
 
-	mux.HandleFunc("GET /api/metrics", func(w http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("GET /admin/metrics", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(200)
-		w.Write([]byte(fmt.Sprintf("Hits: %d", apiCfg.returnRequests())))
+		w.Write([]byte(fmt.Sprintf(
+			`
+			<html>
+				<body>
+					<h1>Welcome, Chirpy Admin</h1>
+					<p>Chirpy has been visited %d times!</p>
+				</body>
+			</html>
+			`, 
+			apiCfg.returnRequests())))
 	}) 
 	
-	mux.HandleFunc("POST /api/reset", func(w http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("POST /admin/reset", func(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(200)
 		apiCfg.resetRequests()
 		w.Write([]byte(fmt.Sprintf("Server Hits reset! %d", apiCfg.returnRequests())))
