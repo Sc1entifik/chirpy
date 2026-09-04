@@ -48,6 +48,10 @@ func main() {
 			Body string `json:"body"`
 		} 
 
+		type cleaned struct {
+			Cleaned_body string `json:"cleaned_body"`
+		}
+
 		decoder := json.NewDecoder(req.Body)
 		params := parameters{}
 		err := decoder.Decode(&params)
@@ -69,9 +73,11 @@ func main() {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
+		response := CleanString(params.Body)
+		response_json, _ := json.Marshal(cleaned {Cleaned_body: response})
+		
 		w.WriteHeader(200)
-		w.Write([]byte(`{"valid": true}`))
-
+		w.Write(response_json)
 	})
 
 	server.ListenAndServe()
