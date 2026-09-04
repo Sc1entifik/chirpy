@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 )
@@ -40,6 +41,37 @@ func main() {
 		w.WriteHeader(200)
 		apiCfg.resetRequests()
 		w.Write([]byte(fmt.Sprintf("Server Hits reset! %d", apiCfg.returnRequests())))
+	})
+
+	mux.HandleFunc("POST /api/validate_chirp", func(w http.ResponseWriter, req *http.Request) {
+		type parameters struct {
+			Body string `json:"body"`
+		} 
+
+		decoder := json.NewDecoder(req.Body)
+		params := parameters{}
+		err := decoder.Decode(&params)
+
+		if err != nil {
+			error_response := `{"error": "Something went wrong"}`
+			fmt.Printf("Error decoding parameters: %s", err)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(500)
+			w.Write([]byte(error_response))
+			return 
+		}
+
+		if len(params.Body) > 140 {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(400)		
+			w.Write([]byte(`{"error": "Chirp is too long"}`))
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(200)
+		w.Write([]byte(`{"valid": true}`))
+
 	})
 
 	server.ListenAndServe()
