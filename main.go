@@ -112,10 +112,27 @@ func main() {
 		chirpy_user, err := dbQueries.CreateUser(req.Context(), params.Email)
 
 		if err != nil {
-
+			JsonError(w, err)
+			return
 		}
 
-			})
+		userResponse := User{
+			ID: chirpy_user.ID,
+			CreatedAt: chirpy_user.CreatedAt,
+			UpdatedAt: chirpy_user.UpdatedAt,
+			Email: chirpy_user.Email,
+		}
+
+		data, err := json.Marshal(userResponse)
+
+		if err != nil {
+			JsonError(w, err)
+			return
+		}
+
+		w.WriteHeader(http.StatusCreated)
+		w.Write(data)
+	})
 
 	server.ListenAndServe()
 }
