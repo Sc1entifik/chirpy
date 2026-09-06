@@ -97,5 +97,22 @@ func main() {
 		w.Write(response_json)
 	})
 
+
+	mux.HandleFunc("POST /api/users", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		type parameters struct {
+			Email string `json:"email"`
+		} 
+
+		decoder := json.NewDecoder(req.Body)
+		params := parameters{}
+		err := decoder.Decode(&params)
+
+		if err != nil {
+
+		}
+			
+			})
+
 	server.ListenAndServe()
 }
