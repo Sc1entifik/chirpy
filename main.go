@@ -61,6 +61,8 @@ func main() {
 	})
 
 	mux.HandleFunc("POST /api/validate_chirp", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
 		type parameters struct {
 			Body string `json:"body"`
 		} 
@@ -74,22 +76,16 @@ func main() {
 		err := decoder.Decode(&params)
 
 		if err != nil {
-			error_response := `{"error": "Something went wrong"}`
-			fmt.Printf("Error decoding parameters: %s", err)
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(500)
-			w.Write([]byte(error_response))
+			JsonError(w, err)
 			return 
 		}
 
 		if len(params.Body) > 140 {
-			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(400)		
 			w.Write([]byte(`{"error": "Chirp is too long"}`))
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
 		response := CleanString(params.Body)
 		response_json, _ := json.Marshal(cleaned {Cleaned_body: response})
 		
@@ -109,14 +105,15 @@ func main() {
 		err := decoder.Decode(&params)
 
 		if err != nil {
-			error_response := `{"error": "Something went wrong"}`
-			fmt.Printf("Error decoding parameters: %s", err)
-			w.WriteHeader(500)
-			w.Write([]byte(error_response))
+			JsonError(w, err)
 			return
 		}
 
 		chirpy_user, err := dbQueries.CreateUser(req.Context(), params.Email)
+
+		if err != nil {
+
+		}
 
 			})
 
