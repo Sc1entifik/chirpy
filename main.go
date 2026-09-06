@@ -109,9 +109,15 @@ func main() {
 		err := decoder.Decode(&params)
 
 		if err != nil {
-
+			error_response := `{"error": "Something went wrong"}`
+			fmt.Printf("Error decoding parameters: %s", err)
+			w.WriteHeader(500)
+			w.Write([]byte(error_response))
+			return
 		}
-			
+
+		chirpy_user, err := dbQueries.CreateUser(req.Context(), params.Email)
+
 			})
 
 	server.ListenAndServe()
