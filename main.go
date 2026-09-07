@@ -57,8 +57,9 @@ func main() {
 	mux.HandleFunc("POST /admin/reset", func(w http.ResponseWriter, req *http.Request) {
 		platform := os.Getenv("PLATFORM")
 		
-		if platform == "dev" {
+		if platform != "dev" {
 			w.WriteHeader(403)
+			w.Write([]byte("Deletion failed. Perhaps you tried to delete from outside local host?\n"))
 		} else {
 			w.WriteHeader(200)
 			dbQueries.RemoveAllUsers(req.Context())
