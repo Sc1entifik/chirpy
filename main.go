@@ -55,9 +55,15 @@ func main() {
 	}) 
 	
 	mux.HandleFunc("POST /admin/reset", func(w http.ResponseWriter, req *http.Request) {
-		w.WriteHeader(200)
-		apiCfg.resetRequests()
-		w.Write([]byte(fmt.Sprintf("Server Hits reset! %d", apiCfg.returnRequests())))
+		platform := os.Getenv("PLATFORM")
+		
+		if platform == "dev" {
+			w.WriteHeader(403)
+		} else {
+			w.WriteHeader(200)
+			dbQueries.RemoveAllUsers(req.Context())
+			w.Write([]byte("All users removed from users DB."))
+		}
 	})
 
 	mux.HandleFunc("POST /api/validate_chirp", func(w http.ResponseWriter, req *http.Request) {
