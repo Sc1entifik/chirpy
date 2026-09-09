@@ -67,15 +67,19 @@ func main() {
 		}
 	})
 
-	mux.HandleFunc("POST /api/validate_chirp", func(w http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("POST /api/chirps", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
 		type parameters struct {
 			Body string `json:"body"`
+			UserId string `json:"user_id"`
 		} 
 
 		type cleaned struct {
 			Cleaned_body string `json:"cleaned_body"`
+			UserId string `json:"user_id"`
+			CreatedAt string `json:"created_at"`
+			UpdatedAt string `json:"updated_at"`
 		}
 
 		decoder := json.NewDecoder(req.Body)
