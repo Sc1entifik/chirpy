@@ -8,7 +8,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
@@ -75,11 +77,12 @@ func main() {
 			UserId string `json:"user_id"`
 		} 
 
-		type cleaned struct {
-			Cleaned_body string `json:"cleaned_body"`
-			UserId string `json:"user_id"`
-			CreatedAt string `json:"created_at"`
-			UpdatedAt string `json:"updated_at"`
+		type chirp struct {
+			ID uuid.UUID `json:"id"`
+			CreatedAt time.Time `json:"created_at"`
+			UpdatedAt time.Time `json:"updated_at"`
+			UserId uuid.UUID `json:"user_id"`
+			Body string `json:"body"`
 		}
 
 		decoder := json.NewDecoder(req.Body)
@@ -97,10 +100,39 @@ func main() {
 			return
 		}
 
-		response := CleanString(params.Body)
-		response_json, _ := json.Marshal(cleaned {Cleaned_body: response})
+		body := CleanString(params.Body)
+		user_id, err := uuid.Parse(params.UserId)
+
+		if err != nil {
+			JsonError(w, err)	
+			return
+		}
+
+		response, err := dbQueries.CreateChirp(req.Context(), database.CreateChirpParams{Body: body, UserID: user_id})
 		
-		w.WriteHeader(200)
+		if err != nil {
+			JsonError(w, err)
+			return
+		}
+
+
+		chirp_json := chirp {
+			Body: response.Body,
+			ID: response.ID,
+			UserId: response.UserID,
+			CreatedAt: response.CreatedAt,
+			UpdatedAt: response.UpdatedAt,
+		}
+
+		response_json , err := json.Marshal(chirp_json)
+
+		if err != nil {
+			JsonError(w, err)
+			return
+		}
+
+
+		w.WriteHeader(201)
 		w.Write(response_json)
 	})
 
