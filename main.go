@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
@@ -76,14 +75,6 @@ func main() {
 			Body string `json:"body"`
 			UserId string `json:"user_id"`
 		} 
-
-		type chirp struct {
-			ID uuid.UUID `json:"id"`
-			CreatedAt time.Time `json:"created_at"`
-			UpdatedAt time.Time `json:"updated_at"`
-			UserId uuid.UUID `json:"user_id"`
-			Body string `json:"body"`
-		}
 
 		decoder := json.NewDecoder(req.Body)
 		params := parameters{}
@@ -178,14 +169,6 @@ func main() {
 
 	mux.HandleFunc("GET /api/chirps", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type","application/json")
-
-		type chirp struct {
-			ID uuid.UUID `json:"id"`
-			Body string `json:"body"`
-			CreatedAt time.Time `json:"created_at"`
-			UpdatedAt time.Time `json:"updated_at"`
-			UserID uuid.UUID `json:"user_id"`
-		}
 
 		chirps, err := dbQueries.GetAllChirps(req.Context())
 
