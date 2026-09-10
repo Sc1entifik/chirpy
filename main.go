@@ -4,6 +4,7 @@ import (
 	"chirpy/internal/database"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -110,7 +111,7 @@ func main() {
 		chirp_json := chirp {
 			Body: response.Body,
 			ID: response.ID,
-			UserId: response.UserID,
+			UserID: response.UserID,
 			CreatedAt: response.CreatedAt,
 			UpdatedAt: response.UpdatedAt,
 		}
@@ -190,6 +191,47 @@ func main() {
 		}
 
 		chirp_response, err := json.Marshal(response_chirps)
+
+		if err != nil {
+			JsonError(w, err)
+			return
+		}
+
+		w.WriteHeader(200)
+		w.Write(chirp_response)
+	})
+
+	mux.HandleFunc("GET /api/chirps/{chirpID}", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-type", "application/json")
+		chirpID, err := uuid.Parse(req.PathValue("chirpID"))
+
+		if err != nil {
+			JsonError(w, err)
+			return
+		}
+
+		wanted_chirp, err := dbQueries.GetChirpByID(req.Context(), chirpID)
+
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				error_response := `{"error": "Chirp Not Found!"}`
+				fmt.Printf("Chirp not found in database!\n ErrorCode: %s", err)
+				w.WriteHeader(404)
+				w.Write([]byte(error_response))
+				return
+			}
+
+			JsonError(w, err)
+			return
+		}
+
+		chirp_response, err := json.Marshal(chirp {
+			ID: wanted_chirp.ID,
+			Body: wanted_chirp.Body,
+			CreatedAt: wanted_chirp.CreatedAt,
+			UpdatedAt: wanted_chirp.UpdatedAt,
+			UserID: wanted_chirp.UserID,
+		})
 
 		if err != nil {
 			JsonError(w, err)
