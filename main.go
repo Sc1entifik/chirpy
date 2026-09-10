@@ -136,7 +136,6 @@ func main() {
 		w.Write(response_json)
 	})
 
-
 	mux.HandleFunc("POST /api/users", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		type parameters struct {
@@ -175,6 +174,47 @@ func main() {
 
 		w.WriteHeader(http.StatusCreated)
 		w.Write(data)
+	})
+
+	mux.HandleFunc("GET /api/chirps", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type","application/json")
+
+		type chirp struct {
+			ID uuid.UUID `json:"id"`
+			Body string `json:"body"`
+			CreatedAt time.Time `json:"created_at"`
+			UpdatedAt time.Time `json:"updated_at"`
+			UserID uuid.UUID `json:"user_id"`
+		}
+
+		chirps, err := dbQueries.GetAllChirps(req.Context())
+
+		if err != nil {
+			JsonError(w, err)
+			return
+		}
+
+		response_chirps := []chirp {}
+
+		for _, user_chirp := range chirps {
+			response_chirps = append(response_chirps, chirp{
+				ID: user_chirp.ID,
+				Body: user_chirp.Body,
+				CreatedAt: user_chirp.CreatedAt,
+				UpdatedAt: user_chirp.UpdatedAt,
+				UserID: user_chirp.UserID,
+			})
+		}
+
+		chirp_response, err := json.Marshal(response_chirps)
+
+		if err != nil {
+			JsonError(w, err)
+			return
+		}
+
+		w.WriteHeader(200)
+		w.Write(chirp_response)
 	})
 
 	server.ListenAndServe()
