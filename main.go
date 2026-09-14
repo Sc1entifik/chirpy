@@ -1,6 +1,7 @@
 package main
 
 import (
+	"chirpy/internal/auth"
 	"chirpy/internal/database"
 	"database/sql"
 	"encoding/json"
@@ -144,7 +145,14 @@ func main() {
 			return
 		}
 
-		chirpy_user, err := dbQueries.CreateUser(req.Context(), params.Email)
+		hashed_password, err := auth.HashPassword(params.Password)
+
+		if err != nil {
+			JsonError(w, err)
+			return
+		}
+		
+		chirpy_user, err := dbQueries.CreateUser(req.Context(), database.CreateUserParams{Email: params.Email, HashedPassword: hashed_password})
 
 		if err != nil {
 			JsonError(w, err)

@@ -1,6 +1,6 @@
 -- +goose up
 ALTER TABLE users
-ADD hashed_password TEXT
+ADD hashed_password TEXT NOT Null
   CONSTRAINT hashed_password DEFAULT 'unset';
 
 
