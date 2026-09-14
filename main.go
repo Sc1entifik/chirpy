@@ -132,6 +132,7 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		type parameters struct {
 			Email string `json:"email"`
+			Password string `json:"password"`
 		} 
 
 		decoder := json.NewDecoder(req.Body)
