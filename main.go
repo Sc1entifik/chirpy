@@ -266,6 +266,39 @@ func main() {
 			return
 		}
 
+		user_data, err := dbQueries.GetUserByEmail(req.Context(), params.Email)
+
+		if err != nil {
+			w.WriteHeader(401)
+			w.Write([]byte("Incorrect email or password"))
+		}
+
+		hashed_password, err := auth.CheckPasswordHash(params.Password, user_data.HashedPassword)
+
+		if err != nil {
+			JsonError(w, err)
+			return
+		}
+
+		if hashed_password != true {
+			w.WriteHeader(401)
+			w.Write([]byte("Incorrect email or password"))
+		}
+
+		user_response, err := json.Marshal(User{
+			ID: user_data.ID,
+			CreatedAt: user_data.CreatedAt,
+			UpdatedAt: user_data.UpdatedAt,
+			Email: user_data.Email,
+		})
+
+		if err != nil {
+			JsonError(w, err)
+			return
+		}
+
+		w.WriteHeader(200)
+		w.Write(user_response)
 	})
 
 	server.ListenAndServe()
