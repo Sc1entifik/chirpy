@@ -251,5 +251,21 @@ func main() {
 		w.Write(chirp_response)
 	})
 
+	mux.HandleFunc("POST /api/login", func(w http.ResponseWriter, req *http.Request){
+		type parameters struct {
+			Password string `json:"password"`
+			Email string `json:"email"`
+		}
+
+		params := parameters{}
+		decoder := json.NewDecoder(req.Body)
+		err := decoder.Decode(&params)
+
+		if err != nil {
+			JsonError(w, err)
+			return
+		}
+	})
+
 	server.ListenAndServe()
 }
