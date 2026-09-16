@@ -54,7 +54,3 @@ func TestInvalidTokenSecretValidation(t *testing.T) {
 		t.Errorf("Validation passed despite nonsense secret value being given. NonsenseTokenSecret: %v", nonsense_token_secret)
 	}
 }
-
-
-
-
