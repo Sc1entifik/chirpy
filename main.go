@@ -29,6 +29,7 @@ func main() {
 	dbQueries := database.New(db)
 	apiCfg := &apiConfig{}
 	apiCfg.db = dbQueries
+	apiCfg.jwt_secret = os.Getenv("JWT_SECRET")
 	mux := http.NewServeMux()
 	server := &http.Server{
 		Addr: ":8080",
@@ -255,6 +256,7 @@ func main() {
 		type parameters struct {
 			Password string `json:"password"`
 			Email string `json:"email"`
+			ExpiresInSeconds int `json:"expires_in_seconds"`
 		}
 
 		params := parameters{}
@@ -265,6 +267,12 @@ func main() {
 			JsonError(w, err)
 			return
 		}
+
+		if params.ExpiresInSeconds == 0 || params.ExpiresInSeconds > 60 * 60 {
+			minute := 60
+			hour := minute * 60
+			params.ExpiresInSeconds = hour 
+		} 
 
 		user_data, err := dbQueries.GetUserByEmail(req.Context(), params.Email)
 
@@ -285,11 +293,18 @@ func main() {
 			w.Write([]byte("Incorrect email or password"))
 		}
 
-		user_response, err := json.Marshal(User{
+		token, err := auth.GetBearerToken(w.Header())
+
+		if err != nil {
+			JsonError(w, err)
+		}
+
+		user_response, err := json.Marshal(TokenUser{
 			ID: user_data.ID,
 			CreatedAt: user_data.CreatedAt,
 			UpdatedAt: user_data.UpdatedAt,
 			Email: user_data.Email,
+			Token: token,
 		})
 
 		if err != nil {
