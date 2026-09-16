@@ -14,7 +14,7 @@ func ValidateJWT(tokenString string, tokenSecret string) (uuid.UUID, error) {
 	if err != nil {
 		return uuid.Nil , err
 	}
-	claims_id, err := uuid.FromBytes([]byte(claims.Subject))
+	claims_id, err := uuid.Parse(claims.Subject)
 
 	if err != nil {
 		return uuid.Nil, err
