@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
@@ -76,17 +77,35 @@ func main() {
 
 		type parameters struct {
 			Body string `json:"body"`
-			UserId string `json:"user_id"`
 		} 
+
 
 		decoder := json.NewDecoder(req.Body)
 		params := parameters{}
-		err := decoder.Decode(&params)
+		err = decoder.Decode(&params)
 
 		if err != nil {
 			JsonError(w, err)
 			return 
 		}
+
+		bearer_token, err := auth.GetBearerToken(req.Header)
+
+		if err != nil {
+			w.WriteHeader(401)
+			w.Write([]byte(fmt.Sprintf("No bearer token present probably: %v", err)))
+		}
+
+		user_id, err := auth.ValidateJWT(bearer_token, apiCfg.jwt_secret)
+
+
+		if err != nil {
+			w.WriteHeader(401)
+			w.Write([]byte(fmt.Sprintf("User token could not be validated by validation function: %v", err)))
+			return
+		}
+
+
 
 		if len(params.Body) > 140 {
 			w.WriteHeader(400)		
@@ -95,12 +114,14 @@ func main() {
 		}
 
 		body := CleanString(params.Body)
+		/*
 		user_id, err := uuid.Parse(params.UserId)
 
 		if err != nil {
 			JsonError(w, err)	
 			return
 		}
+		*/
 
 		response, err := dbQueries.CreateChirp(req.Context(), database.CreateChirpParams{Body: body, UserID: user_id})
 		
@@ -187,6 +208,8 @@ func main() {
 			JsonError(w, err)
 			return
 		}
+
+
 
 		response_chirps := []chirp {}
 
@@ -279,6 +302,7 @@ func main() {
 		if err != nil {
 			w.WriteHeader(401)
 			w.Write([]byte("Incorrect email or password"))
+			return
 		}
 
 		hashed_password, err := auth.CheckPasswordHash(params.Password, user_data.HashedPassword)
@@ -291,12 +315,21 @@ func main() {
 		if hashed_password != true {
 			w.WriteHeader(401)
 			w.Write([]byte("Incorrect email or password"))
+			return
 		}
-
-		token, err := auth.GetBearerToken(w.Header())
+		
+		expires_in_seconds, err := time.ParseDuration(fmt.Sprintf("%vs", params.ExpiresInSeconds))
 
 		if err != nil {
 			JsonError(w, err)
+			return
+		}
+
+		token, err := auth.MakeJWT(user_data.ID, apiCfg.jwt_secret, expires_in_seconds)
+
+		if err != nil {
+			JsonError(w, err)
+			return
 		}
 
 		user_response, err := json.Marshal(TokenUser{
