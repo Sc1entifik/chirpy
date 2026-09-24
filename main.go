@@ -359,6 +359,32 @@ func main() {
 			return
 		}
 
+		userId, err := dbQueries.UserFromRefreshToken(req.Context(), bearerToken)
+
+		if err != nil {
+			w.WriteHeader(401)
+			w.Write([]byte(fmt.Sprintf("Invalid Refresh Token: %v", err)))
+			return
+		}
+
+		access_token, err := auth.MakeJWT(userId, apiCfg.jwt_secret, time.Hour)
+
+		if err != nil {
+			w.WriteHeader(401)
+			w.Write([]byte(fmt.Sprintf("Access Token Generation Failed At Refresh Token Route!: %v", err)))
+			return
+		}
+
+		access_token_marshal, err := json.Marshal(struct{Token string} {Token: access_token})
+
+		if err != nil {
+			w.WriteHeader(401)
+			w.Write([]byte(fmt.Sprintf("Access Token Marshalling Failed At RefreshToken Route!: %v", err)))
+			return
+		}
+
+		w.WriteHeader(200)
+		w.Write(access_token_marshal)
 	})
 
 
