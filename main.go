@@ -407,6 +407,63 @@ func main() {
 		w.WriteHeader(204)
 	})
 
+	mux.HandleFunc("PUT /api/users", func(w http.ResponseWriter, req *http.Request) {
+		bearerToken, err := auth.GetBearerToken(req.Header)
+
+		if err != nil {
+			w.WriteHeader(401)
+			w.Write([]byte(fmt.Sprintf("Access Token Not Present In PUT /api/users Route: %v", err)))
+			return
+		}
+
+		type parameters struct {
+			Password string `json:"password"`
+			Email string `json:"email"`
+		}
+
+		decoder := json.NewDecoder(req.Body)
+		params := parameters{}
+		err = decoder.Decode(&params)
+
+		if err != nil {
+			JsonError(w, err)
+			return 
+		}
+
+		userID, err := auth.ValidateJWT(bearerToken, apiCfg.jwt_secret)
+
+		if err != nil {
+			w.WriteHeader(401)
+			w.Write([]byte(fmt.Sprintf("Invalid Auth Token: %v", err)))
+			return
+		}
+
+		hashedPassword, err := auth.HashPassword(params.Password)
+
+		if err != nil {
+			JsonError(w, err)
+			return
+		}
+
+		err = dbQueries.UpdateUserEmailAndPassword(req.Context(), database.UpdateUserEmailAndPasswordParams{ID: userID, Email: params.Email, HashedPassword: hashedPassword})
+
+		if err != nil {
+			w.WriteHeader(401)
+			w.Write([]byte(fmt.Sprintf("Updating User Email And Password Failed: %v", err)))
+		}
+
+		userParams, err := json.Marshal(params)
+
+		if err != nil {
+			w.WriteHeader(401)
+			w.Write([]byte(fmt.Sprintf("Marshalling params for return object failed: %v", err)))
+		}
+
+
+		w.WriteHeader(200)
+		w.Write(userParams)
+	})
+
 
 	server.ListenAndServe()
 }
