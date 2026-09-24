@@ -354,10 +354,10 @@ func main() {
 		bearerToken, err := auth.GetBearerToken(req.Header)
 
 		if err != nil {
-			JsonError(w, err)
+			w.WriteHeader(401)
+			w.Write([]byte(fmt.Sprintf("Refresh route failed to extract refresh token: %v", err)))
 			return
 		}
-
 
 	})
 
