@@ -375,7 +375,7 @@ func main() {
 			return
 		}
 
-		access_token_marshal, err := json.Marshal(struct{Token string} {Token: access_token})
+		access_token_marshal, err := json.Marshal(struct{Token string `json:"token"`} {Token: access_token})
 
 		if err != nil {
 			w.WriteHeader(401)
@@ -385,6 +385,26 @@ func main() {
 
 		w.WriteHeader(200)
 		w.Write(access_token_marshal)
+	})
+
+	mux.HandleFunc("POST /api/revoke", func(w http.ResponseWriter, req *http.Request) {
+		bearerToken, err := auth.GetBearerToken(req.Header)
+
+		if err != nil {
+			w.WriteHeader(401)
+			w.Write([]byte(fmt.Sprintf("No refresh Token Present In Refresh Token Revoke Route: %v", err)))
+			return
+		}
+
+		err = dbQueries.RevokeRefreshToken(req.Context(), bearerToken)
+
+		if err != nil {
+			w.WriteHeader(401)
+			w.Write([]byte(fmt.Sprintf("Refresh Token Revocation Failed: %v", err)))
+			return
+		}
+
+		w.WriteHeader(204)
 	})
 
 
