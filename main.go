@@ -311,7 +311,7 @@ func main() {
 			return
 		}
 		
-		token, err := auth.MakeJWT(user_data.ID, apiCfg.jwt_secret, expires_in_seconds)
+		token, err := auth.MakeJWT(user_data.ID, apiCfg.jwt_secret, time.Hour)
 
 		if err != nil {
 			JsonError(w, err)
