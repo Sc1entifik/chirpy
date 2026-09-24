@@ -279,7 +279,6 @@ func main() {
 		type parameters struct {
 			Password string `json:"password"`
 			Email string `json:"email"`
-			ExpiresInSeconds int `json:"expires_in_seconds"`
 		}
 
 		params := parameters{}
@@ -290,12 +289,6 @@ func main() {
 			JsonError(w, err)
 			return
 		}
-
-		if params.ExpiresInSeconds == 0 || params.ExpiresInSeconds > 60 * 60 {
-			minute := 60
-			hour := minute * 60
-			params.ExpiresInSeconds = hour 
-		} 
 
 		user_data, err := dbQueries.GetUserByEmail(req.Context(), params.Email)
 
@@ -318,14 +311,21 @@ func main() {
 			return
 		}
 		
-		expires_in_seconds, err := time.ParseDuration(fmt.Sprintf("%vs", params.ExpiresInSeconds))
+		token, err := auth.MakeJWT(user_data.ID, apiCfg.jwt_secret, expires_in_seconds)
 
 		if err != nil {
 			JsonError(w, err)
 			return
 		}
 
-		token, err := auth.MakeJWT(user_data.ID, apiCfg.jwt_secret, expires_in_seconds)
+		refresh_token, err := auth.MakeRefreshToken()
+
+		if err != nil {
+			JsonError(w, err)
+			return
+		}
+
+		_, err = dbQueries.CreateRefreshToken(req.Context(), database.CreateRefreshTokenParams{Token: refresh_token, UserID: user_data.ID})
 
 		if err != nil {
 			JsonError(w, err)
@@ -338,6 +338,7 @@ func main() {
 			UpdatedAt: user_data.UpdatedAt,
 			Email: user_data.Email,
 			Token: token,
+			RefreshToken: refresh_token,
 		})
 
 		if err != nil {
