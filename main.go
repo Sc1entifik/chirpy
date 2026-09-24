@@ -350,5 +350,17 @@ func main() {
 		w.Write(user_response)
 	})
 
+	mux.HandleFunc("POST /api/refresh", func(w http.ResponseWriter, req *http.Request) {
+		bearerToken, err := auth.GetBearerToken(req.Header)
+
+		if err != nil {
+			JsonError(w, err)
+			return
+		}
+
+
+	})
+
+
 	server.ListenAndServe()
 }
