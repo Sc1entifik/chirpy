@@ -464,6 +464,58 @@ func main() {
 		w.Write(userParams)
 	})
 
+	mux.HandleFunc("DELETE /api/chirps/{chirpID}", func(w http.ResponseWriter, req *http.Request) {
+		bearerToken, err := auth.GetBearerToken(req.Header)
+
+		if err != nil {
+			w.WriteHeader(401)
+			w.Write([]byte(fmt.Sprintf("Bearer Token Not Present at DELETE /api/chirps: %v",err)))
+			return
+		}
+
+		userID, err := auth.ValidateJWT(bearerToken, apiCfg.jwt_secret)
+
+		if err != nil {
+			w.WriteHeader(403)
+			w.Write([]byte(fmt.Sprintf("Bearer Token Not Valid at DELETE /api/chirps: $v", err)))
+			return
+		}
+
+		chirpID := req.PathValue("chirpID")
+		parsedChirpID, err := uuid.Parse(chirpID);
+
+		if err != nil {
+			w.WriteHeader(403)
+			w.Write([]byte(fmt.Sprintf("chirpId failed to parse to UUID datatype. Maybe checkfor incorrect or weird characters: %v", err)))
+			return
+		}
+
+		chirp, err := dbQueries.GetChirpByID(req.Context(), parsedChirpID)
+
+		if err != nil {
+			w.WriteHeader(403)
+			w.Write([]byte(fmt.Sprintf("Chirp Could Not Be Found By ID")))
+			return
+		}
+
+		if chirp.UserID != userID {
+			w.WriteHeader(403)
+			w.Write([]byte(fmt.Sprintf("Chirp Not Made By User: %v")))
+			return
+		}
+
+
+		err = dbQueries.DeleteChirp(req.Context(), database.DeleteChirpParams{ID: parsedChirpID, UserID: userID})
+
+		if err != nil {
+			w.WriteHeader(404)
+			w.Write([]byte(fmt.Sprintf("Chirp Deletion Failed. Check Chirp ID for accuracy: %v", err)))
+			return
+		}
+
+		w.WriteHeader(204)
+	})
+
 
 	server.ListenAndServe()
 }
