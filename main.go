@@ -114,15 +114,6 @@ func main() {
 		}
 
 		body := CleanString(params.Body)
-		/*
-		user_id, err := uuid.Parse(params.UserId)
-
-		if err != nil {
-			JsonError(w, err)	
-			return
-		}
-		*/
-
 		response, err := dbQueries.CreateChirp(req.Context(), database.CreateChirpParams{Body: body, UserID: user_id})
 		
 		if err != nil {
