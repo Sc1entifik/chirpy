@@ -77,6 +77,7 @@ func main() {
 
 		type parameters struct {
 			Body string `json:"body"`
+			IsChirpyRed bool `json:"is_chirpy_red"`
 		} 
 
 
@@ -200,8 +201,6 @@ func main() {
 			return
 		}
 
-
-
 		response_chirps := []chirp {}
 
 		for _, user_chirp := range chirps {
@@ -270,6 +269,7 @@ func main() {
 		type parameters struct {
 			Password string `json:"password"`
 			Email string `json:"email"`
+			IsChirpyRed bool `json:"is_chipry_red"`
 		}
 
 		params := parameters{}
@@ -330,6 +330,7 @@ func main() {
 			Email: user_data.Email,
 			Token: token,
 			RefreshToken: refresh_token,
+			IsChirpyRed: user_data.IsChirpyRed,
 		})
 
 		if err != nil {
@@ -410,6 +411,7 @@ func main() {
 		type parameters struct {
 			Password string `json:"password"`
 			Email string `json:"email"`
+			IsChirpyRed bool `json:"is_chipry_red"`
 		}
 
 		decoder := json.NewDecoder(req.Body)
@@ -506,6 +508,52 @@ func main() {
 
 		w.WriteHeader(204)
 	})
+
+	mux.HandleFunc("POST /api/polka/webhooks", func(w http.ResponseWriter, req *http.Request) {
+		type userID struct {
+			UserID string `json:"user_id"`
+		}
+
+		type parameters struct {
+			Event string `json:"event"`
+			Data userID `json:"data"`
+		}
+
+		decoder := json.NewDecoder(req.Body)
+		params := parameters {}
+		err = decoder.Decode(&params)
+
+		if err != nil {
+			w.WriteHeader(401)
+			w.Write([]byte(fmt.Sprintf("Input parameters is not in correct shape: %v", err)))
+			return 
+		}
+
+		if params.Event != "user.upgraded" {
+			w.WriteHeader(204)
+			w.Write([]byte("User event is of not correct type."))
+			return 
+		}
+
+		userIdentification, err := uuid.Parse(params.Data.UserID)
+
+		if err != nil {
+			w.WriteHeader(404)
+			w.Write([]byte(fmt.Sprintf("user ID failed to parse to UUID: %v", err)))
+			return
+		}
+
+		err = dbQueries.ChirpyRedUpgrade(req.Context(), userIdentification)
+
+		if err != nil {
+			w.WriteHeader(404)
+			w.Write([]byte(fmt.Sprintf("User account upgrade failed maybe invalid user ID? : %v",err)))
+		}
+
+		w.WriteHeader(204)
+})
+
+
 
 
 	server.ListenAndServe()
