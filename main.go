@@ -519,6 +519,19 @@ func main() {
 			Event string `json:"event"`
 			Data userID `json:"data"`
 		}
+		polkaKey, err := auth.GetApiKey(req.Header)
+
+		if err != nil {
+			w.WriteHeader(401)
+			w.Write([]byte(fmt.Sprintf("API Key not present in Header: %v",err)))
+			return
+		}
+
+		if apiCfg.polka_api_key != polkaKey {
+			w.WriteHeader(401)
+			w.Write([]byte("API key mismatch"))
+			return
+		}
 
 		decoder := json.NewDecoder(req.Body)
 		params := parameters {}
