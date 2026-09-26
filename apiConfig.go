@@ -11,6 +11,7 @@ type apiConfig struct {
 	fileserverHits atomic.Int32
 	db *database.Queries
 	jwt_secret string
+	polka_api_key string
 }
 
 func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {

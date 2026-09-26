@@ -31,6 +31,7 @@ func main() {
 	apiCfg := &apiConfig{}
 	apiCfg.db = dbQueries
 	apiCfg.jwt_secret = os.Getenv("JWT_SECRET")
+	apiCfg.polka_api_key = os.Getenv("POLKA_KEY")
 	mux := http.NewServeMux()
 	server := &http.Server{
 		Addr: ":8080",
