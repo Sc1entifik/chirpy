@@ -194,6 +194,20 @@ func main() {
 
 	mux.HandleFunc("GET /api/chirps", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type","application/json")
+		authorIDString := req.URL.Query().Get("author_id")
+
+		if authorIDString != "" {
+			chirps, err := dbQueries.GetChirpByID(req.Context(),authorIDString)
+
+			if err != nil {
+				w.WriteHeader(401)
+				w.Write([]byte(fmt.Sprintf("Chirps not found by this author. Check authorID number: %v", err)))
+				return
+			}
+
+			w.WriteHeader(200)
+			
+		}
 
 		chirps, err := dbQueries.GetAllChirps(req.Context())
 
@@ -566,9 +580,6 @@ func main() {
 
 		w.WriteHeader(204)
 })
-
-
-
 
 	server.ListenAndServe()
 }
