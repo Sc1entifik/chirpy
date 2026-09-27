@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sort"
 	"time"
 
 	"github.com/google/uuid"
@@ -195,6 +196,7 @@ func main() {
 	mux.HandleFunc("GET /api/chirps", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type","application/json")
 		authorIDString := req.URL.Query().Get("author_id")
+		sortChirps := req.URL.Query().Get("sort")
 		var chirps []database.Chirp
 		var err error
 
@@ -224,6 +226,12 @@ func main() {
 				JsonError(w, err)
 				return
 			}
+		}
+
+		if sortChirps == "desc" {
+			sort.Slice(chirps, func(x, y int) bool {
+				return chirps[x].CreatedAt.After(chirps[y].CreatedAt)
+			})
 		}
 
 		response_chirps := []chirp {}
