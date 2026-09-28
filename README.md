@@ -2,7 +2,7 @@
 This project was a Boot.dev course about building a fileserver in Go.
 
 ## Things Accomplished and Learned In This Course
-- Built a fileserver from scratch in Go.
+- Built an HTTP server from scratch in Go.
 - Built a local Postgres database.
 - Built Restful APIs that performed CRUD operations on a Postgres database.
 - Learned Goose to create and perform Postgres database migrations from SQL commands.
