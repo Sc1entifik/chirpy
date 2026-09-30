@@ -1,5 +1,5 @@
 # Purpose of this project
-This project was a Boot.dev course about building a fileserver in Go.
+This project was a Boot.dev course about building a webserver in Go.
 
 ## Things Accomplished and Learned In This Course
 - Built an HTTP server from scratch in Go.
